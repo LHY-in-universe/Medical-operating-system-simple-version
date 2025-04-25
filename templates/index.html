@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>装置记录管理系统</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                max-width: 800px;
+                margin: 0 auto;
+                padding: 20px;
+            }
+            .container {
+                margin-bottom: 20px;
+            }
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 20px;
+            }
+            th,
+            td {
+                border: 1px solid #ddd;
+                padding: 8px;
+                text-align: left;
+            }
+            th {
+                background-color: #f2f2f2;
+            }
+            .btn {
+                padding: 8px 16px;
+                background-color: #4caf50;
+                color: white;
+                border: none;
+                cursor: pointer;
+                text-decoration: none;
+                display: inline-block;
+                margin: 4px 2px;
+            }
+            .btn:hover {
+                background-color: #45a049;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>装置记录管理系统</h1>
+
+        <div class="container">
+            <h2>添加新记录</h2>
+            <a href="/add_record" class="btn">添加记录</a>
+        </div>
+
+        <div class="container">
+            <h2>查询记录</h2>
+            <form id="queryForm">
+                <label for="device_id">装置编号:</label>
+                <input type="text" id="device_id" name="device_id" />
+                <button type="submit" class="btn">查询</button>
+                <button type="button" onclick="clearQuery()" class="btn">
+                    清空
+                </button>
+            </form>
+
+            <div id="resultContainer">
+                <table id="resultTable">
+                    <thead>
+                        <tr>
+                            <th>装置编号</th>
+                            <th>更新内容</th>
+                            <th>更新时间</th>
+                        </tr>
+                    </thead>
+                    <tbody id="resultBody">
+                        <!-- 结果将在这里动态加载 -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <script>
+            document
+                .getElementById("queryForm")
+                .addEventListener("submit", function (e) {
+                    e.preventDefault();
+                    queryRecords();
+                });
+
+            // 页面加载时查询所有记录
+            window.onload = function () {
+                queryRecords();
+            };
+
+            function queryRecords() {
+                const deviceId = document.getElementById("device_id").value;
+
+                fetch(`/query?device_id=${encodeURIComponent(deviceId)}`)
+                    .then((response) => response.json())
+                    .then((data) => {
+                        const tbody = document.getElementById("resultBody");
+                        tbody.innerHTML = "";
+
+                        if (data.length === 0) {
+                            tbody.innerHTML =
+                                '<tr><td colspan="3">没有找到匹配的记录</td></tr>';
+                        } else {
+                            data.forEach((record) => {
+                                const row = document.createElement("tr");
+                                row.innerHTML = `
+                                <td>${record.device_id || ""}</td>
+                                <td>${record.update_content || ""}</td>
+                                <td>${record.update_time || ""}</td>
+                            `;
+                                tbody.appendChild(row);
+                            });
+                        }
+                    })
+                    .catch((error) => {
+                        console.error("查询出错:", error);
+                        document.getElementById("resultBody").innerHTML =
+                            '<tr><td colspan="3">查询时出错，请重试</td></tr>';
+                    });
+            }
+
+            function clearQuery() {
+                document.getElementById("device_id").value = "";
+                queryRecords();
+            }
+        </script>
+    </body>
+</html>
